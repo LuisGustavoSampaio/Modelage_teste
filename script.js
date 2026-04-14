@@ -7,6 +7,8 @@ window.onload = function() {
   const botaoInstalar = document.getElementById("botaoInstalar");
   const apiInfo = document.getElementById("apiInfo");
   let eventoInstalacao = null;
+  let sincronizacaoEmAndamento = null;
+  let atualizarTelaAtual = function() {};
 
   const STORAGE_KEYS = {
     usuarios: "usuarios",
@@ -325,6 +327,11 @@ window.onload = function() {
   }
 
   async function sincronizarComServidor() {
+    if (sincronizacaoEmAndamento) {
+      return sincronizacaoEmAndamento;
+    }
+
+    sincronizacaoEmAndamento = (async function() {
     if (!navigator.onLine) {
       atualizarStatusSync("Sem conexão com a internet ou rede local.");
       return false;
@@ -374,12 +381,28 @@ window.onload = function() {
       }
 
       atualizarStatusSync("Sincronização concluída com sucesso.");
+      atualizarTelaAtual();
       return true;
     } catch (error) {
       atualizarStatusSync("Servidor indisponível no momento.");
       console.error(error);
       return false;
     }
+    })();
+
+    try {
+      return await sincronizacaoEmAndamento;
+    } finally {
+      sincronizacaoEmAndamento = null;
+    }
+  }
+
+  async function sincronizarSePossivel() {
+    if (!navigator.onLine) {
+      return false;
+    }
+
+    return sincronizarComServidor();
   }
 
   window.sincronizarAgora = async function() {
@@ -396,7 +419,7 @@ window.onload = function() {
   };
 
   if (formCadastro) {
-    formCadastro.addEventListener("submit", function(e) {
+    formCadastro.addEventListener("submit", async function(e) {
       e.preventDefault();
 
       const nome = document.getElementById("nomeCadastro").value.trim();
@@ -421,22 +444,34 @@ window.onload = function() {
 
       alert("Cadastro realizado!");
       formCadastro.reset();
+      await sincronizarSePossivel();
     });
   }
 
   if (formLogin) {
-    formLogin.addEventListener("submit", function(e) {
+    formLogin.addEventListener("submit", async function(e) {
       e.preventDefault();
 
       const nome = document.getElementById("nomeLogin").value.trim();
       const email = document.getElementById("emailLogin").value.trim().toLowerCase();
-      const usuarios = pegarUsuarios();
-      const usuario = usuarios.find(function(item) {
+      let usuarios = pegarUsuarios();
+      let usuario = usuarios.find(function(item) {
         return item.email === email && item.nome === nome;
       });
 
       if (!usuario) {
-        alert("Usuário não encontrado neste dispositivo.");
+        const sincronizou = await sincronizarSePossivel();
+
+        if (sincronizou) {
+          usuarios = pegarUsuarios();
+          usuario = usuarios.find(function(item) {
+            return item.email === email && item.nome === nome;
+          });
+        }
+      }
+
+      if (!usuario) {
+        alert("Usuário não encontrado neste dispositivo nem no servidor.");
         return;
       }
 
@@ -462,7 +497,17 @@ window.onload = function() {
 
     boasVindas.textContent = "Olá, " + usuario.nome;
 
-    window.salvarFormulario = function() {
+    atualizarTelaAtual = function() {
+      const usuarioAtualizado = pegarUsuarioLogado();
+
+      if (usuarioAtualizado) {
+        boasVindas.textContent = "Olá, " + usuarioAtualizado.nome;
+      }
+
+      mostrarFormularios();
+    };
+
+    window.salvarFormulario = async function() {
       const nome = document.getElementById("nomeFormulario").value.trim();
 
       if (!nome) {
@@ -490,9 +535,10 @@ window.onload = function() {
       mostrarFormularios();
 
       alert("Formulário salvo localmente.");
+      await sincronizarSePossivel();
     };
 
-    function excluirFormulario(formularioId) {
+    async function excluirFormulario(formularioId) {
       const confirmar = window.confirm("Deseja excluir este formulário?");
 
       if (!confirmar) {
@@ -545,6 +591,7 @@ window.onload = function() {
 
       mostrarFormularios();
       alert("Formulário marcado para exclusão e sincronização.");
+      await sincronizarSePossivel();
     }
 
     function mostrarFormularios() {
@@ -634,6 +681,19 @@ window.onload = function() {
 
     const respostaExistente = buscarRespostaDoFormulario(formulario.id, usuario.email);
 
+    atualizarTelaAtual = function() {
+      const respostaAtualizada = buscarRespostaDoFormulario(formulario.id, usuario.email);
+
+      if (respostaAtualizada) {
+        campoTexto.value = respostaAtualizada.conteudo || "";
+
+        if (statusSalvamento) {
+          statusSalvamento.textContent =
+            "Último conteúdo salvo em " + formatarData(respostaAtualizada.updatedAt) + ".";
+        }
+      }
+    };
+
     if (respostaExistente) {
       campoTexto.value = respostaExistente.conteudo || "";
 
@@ -643,7 +703,7 @@ window.onload = function() {
       }
     }
 
-    window.enviarFormulario = function() {
+    window.enviarFormulario = async function() {
       const conteudo = campoTexto.value.trim();
 
       if (!conteudo) {
@@ -693,6 +753,11 @@ window.onload = function() {
       }
 
       alert("Conteúdo salvo offline com sucesso.");
+      await sincronizarSePossivel();
     };
+
+    if (navigator.onLine) {
+      sincronizarComServidor();
+    }
   }
 };
