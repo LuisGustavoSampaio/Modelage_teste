@@ -16,20 +16,38 @@ body {
   line-height: 1.5;
 }
 
+.painel-sync,
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.card-destaque {
+  border: 1px solid #334155;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.08);
+}
+
+.guia-instalacao p {
+  color: #cbd5e1;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.oculto {
+  display: none;
+}
+
+.status-sync,
 .status-salvamento {
   color: #86efac;
   min-height: 24px;
+  line-height: 1.5;
 }
 
 h1 {
   text-align: center;
-}
-
-.card {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
 }
 
 input,

@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
   <title>Formulário</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,10 +18,11 @@
 
     <form id="formDinamico"></form>
 
-    <button type="button" onclick="enviarFormulario()">Enviar</button>
+    <button type="button" onclick="enviarFormulario()">Salvar conteúdo</button>
     <button type="button" class="botao-secundario" onclick="voltar()">Voltar</button>
   </div>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
