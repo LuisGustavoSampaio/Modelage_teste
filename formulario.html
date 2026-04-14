@@ -9,17 +9,31 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1 id="tituloFormulario">Formulário</h1>
-    <p class="descricao" id="descricaoFormulario">
-      Preencha este formulário como um documento ou relatório.
-    </p>
-    <p class="status-salvamento" id="statusSalvamento"></p>
+  <div class="page-shell">
+    <div class="glow glow-left"></div>
+    <div class="glow glow-right"></div>
 
-    <form id="formDinamico"></form>
+    <main class="container">
+      <section class="hero hero-form">
+        <span class="eyebrow">Editor de registro</span>
+        <h1 id="tituloFormulario">Formulário</h1>
+        <p class="descricao hero-copy" id="descricaoFormulario">
+          Preencha este formulário como um documento ou relatório.
+        </p>
+      </section>
 
-    <button type="button" onclick="enviarFormulario()">Salvar conteúdo</button>
-    <button type="button" class="botao-secundario" onclick="voltar()">Voltar</button>
+      <section class="card card-editor">
+        <div class="status-bar status-bar-editor">
+          <span class="status-badge" id="statusBadgeFormulario">Rascunho</span>
+          <p class="status-salvamento" id="statusSalvamento"></p>
+        </div>
+        <form id="formDinamico"></form>
+        <div class="acoes-editor">
+          <button type="button" onclick="enviarFormulario()">Salvar conteúdo</button>
+          <button type="button" class="botao-secundario" onclick="voltar()">Voltar</button>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script src="config.js"></script>

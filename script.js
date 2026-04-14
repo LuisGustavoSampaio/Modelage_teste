@@ -4,8 +4,10 @@ window.onload = function() {
   const boasVindas = document.getElementById("boasVindas");
   const formDinamico = document.getElementById("formDinamico");
   const statusSync = document.getElementById("statusSync");
+  const statusBadge = document.getElementById("statusBadge");
   const botaoInstalar = document.getElementById("botaoInstalar");
   const apiInfo = document.getElementById("apiInfo");
+  const statusBadgeFormulario = document.getElementById("statusBadgeFormulario");
   let eventoInstalacao = null;
   let sincronizacaoEmAndamento = null;
   let atualizarTelaAtual = function() {};
@@ -97,6 +99,15 @@ window.onload = function() {
 
   function salvarLista(chave, lista) {
     localStorage.setItem(chave, JSON.stringify(lista));
+  }
+
+  function atualizarBadge(elemento, texto, variante) {
+    if (!elemento) {
+      return;
+    }
+
+    elemento.textContent = texto;
+    elemento.setAttribute("data-variant", variante || "neutral");
   }
 
   function pegarDeviceId() {
@@ -263,11 +274,7 @@ window.onload = function() {
 
   function buscarRespostaDoFormulario(formularioId, email) {
     const respostas = pegarRespostas().filter(function(resposta) {
-      return (
-        resposta.formularioId === formularioId &&
-        resposta.email === email &&
-        !resposta.deleted
-      );
+      return resposta.formularioId === formularioId && resposta.email === email && !resposta.deleted;
     });
 
     return respostas[respostas.length - 1] || null;
@@ -303,7 +310,7 @@ window.onload = function() {
     salvarLista(chave, itensMesclados);
   }
 
-  function atualizarStatusSync(mensagemExtra) {
+  function atualizarStatusSync(mensagemExtra, variante) {
     if (!statusSync) {
       return;
     }
@@ -324,6 +331,12 @@ window.onload = function() {
     }
 
     statusSync.textContent = mensagem;
+
+    if (pendencias > 0) {
+      atualizarBadge(statusBadge, "Pendências", variante || "warning");
+    } else {
+      atualizarBadge(statusBadge, "Em dia", variante || "success");
+    }
   }
 
   async function sincronizarComServidor() {
@@ -332,62 +345,64 @@ window.onload = function() {
     }
 
     sincronizacaoEmAndamento = (async function() {
-    if (!navigator.onLine) {
-      atualizarStatusSync("Sem conexão com a internet ou rede local.");
-      return false;
-    }
-
-    const operacoes = pegarOperacoesPendentes();
-
-    if (operacoes.length === 0) {
-      atualizarStatusSync("Sem novas alterações para enviar.");
-    }
-
-    try {
-      const resposta = await fetch(buildApiUrl("/api/sync"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          deviceId: pegarDeviceId(),
-          operations: operacoes
-        })
-      });
-
-      if (!resposta.ok) {
-        throw new Error("Falha na sincronização com o servidor.");
+      if (!navigator.onLine) {
+        atualizarStatusSync("Sem conexão com a internet ou rede local.", "warning");
+        return false;
       }
 
-      const dados = await resposta.json();
+      const operacoes = pegarOperacoesPendentes();
 
-      aplicarListaMesclada(STORAGE_KEYS.usuarios, dados.usuarios || []);
-      aplicarListaMesclada(STORAGE_KEYS.formularios, dados.formularios || []);
-      aplicarListaMesclada(STORAGE_KEYS.respostas, dados.respostas || []);
+      if (operacoes.length === 0) {
+        atualizarStatusSync("Sem novas alterações para enviar.", "success");
+      } else {
+        atualizarStatusSync("Enviando alterações para o servidor...", "warning");
+      }
 
-      salvarOperacoesPendentes([]);
-      localStorage.setItem(STORAGE_KEYS.ultimaSincronizacao, dados.serverTime || agoraIso());
-
-      const usuarioLogado = pegarUsuarioLogado();
-
-      if (usuarioLogado) {
-        const usuarioAtualizado = pegarUsuarios().find(function(usuario) {
-          return usuario.id === usuarioLogado.id || usuario.email === usuarioLogado.email;
+      try {
+        const resposta = await fetch(buildApiUrl("/api/sync"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            deviceId: pegarDeviceId(),
+            operations: operacoes
+          })
         });
 
-        if (usuarioAtualizado) {
-          salvarUsuarioLogado(usuarioAtualizado);
+        if (!resposta.ok) {
+          throw new Error("Falha na sincronização com o servidor.");
         }
-      }
 
-      atualizarStatusSync("Sincronização concluída com sucesso.");
-      atualizarTelaAtual();
-      return true;
-    } catch (error) {
-      atualizarStatusSync("Servidor indisponível no momento.");
-      console.error(error);
-      return false;
-    }
+        const dados = await resposta.json();
+
+        aplicarListaMesclada(STORAGE_KEYS.usuarios, dados.usuarios || []);
+        aplicarListaMesclada(STORAGE_KEYS.formularios, dados.formularios || []);
+        aplicarListaMesclada(STORAGE_KEYS.respostas, dados.respostas || []);
+
+        salvarOperacoesPendentes([]);
+        localStorage.setItem(STORAGE_KEYS.ultimaSincronizacao, dados.serverTime || agoraIso());
+
+        const usuarioLogado = pegarUsuarioLogado();
+
+        if (usuarioLogado) {
+          const usuarioAtualizado = pegarUsuarios().find(function(usuario) {
+            return usuario.id === usuarioLogado.id || usuario.email === usuarioLogado.email;
+          });
+
+          if (usuarioAtualizado) {
+            salvarUsuarioLogado(usuarioAtualizado);
+          }
+        }
+
+        atualizarStatusSync("Sincronização concluída com sucesso.", "success");
+        atualizarTelaAtual();
+        return true;
+      } catch (error) {
+        atualizarStatusSync("Servidor indisponível no momento.", "danger");
+        console.error(error);
+        return false;
+      }
     })();
 
     try {
@@ -691,6 +706,8 @@ window.onload = function() {
           statusSalvamento.textContent =
             "Último conteúdo salvo em " + formatarData(respostaAtualizada.updatedAt) + ".";
         }
+
+        atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
       }
     };
 
@@ -701,6 +718,10 @@ window.onload = function() {
         statusSalvamento.textContent =
           "Último conteúdo salvo em " + formatarData(respostaExistente.updatedAt) + ".";
       }
+
+      atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
+    } else {
+      atualizarBadge(statusBadgeFormulario, "Rascunho", "warning");
     }
 
     window.enviarFormulario = async function() {
@@ -752,8 +773,11 @@ window.onload = function() {
           "Conteúdo salvo offline em " + formatarData(momento) + ".";
       }
 
+      atualizarBadge(statusBadgeFormulario, "Salvo local", "warning");
+
       alert("Conteúdo salvo offline com sucesso.");
       await sincronizarSePossivel();
+      atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
     };
 
     if (navigator.onLine) {

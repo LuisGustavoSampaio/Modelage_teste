@@ -10,38 +10,51 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Sistema</h1>
+  <div class="page-shell">
+    <div class="glow glow-left"></div>
+    <div class="glow glow-right"></div>
 
-    <div class="card card-destaque">
-      <h2>Instalar no celular</h2>
-      <p class="descricao">
-        Abra este sistema uma vez com internet e depois adicione à tela inicial para usar como app.
-      </p>
-      <button id="botaoInstalar" class="botao-secundario oculto" type="button">Instalar app</button>
-      <div class="guia-instalacao">
-        <p><strong>Android:</strong> menu do navegador &gt; <strong>Adicionar à tela inicial</strong> ou <strong>Instalar app</strong>.</p>
-        <p><strong>iPhone:</strong> Safari &gt; <strong>Compartilhar</strong> &gt; <strong>Adicionar à Tela de Início</strong>.</p>
+    <main class="container">
+      <section class="hero hero-auth">
+        <span class="eyebrow">Modelage Offline</span>
+        <h1>Sistema de formulários que continua funcionando mesmo sem internet</h1>
+        <p class="hero-copy">
+          Crie, preencha e sincronize relatórios textuais com uma experiência pensada para uso em campo.
+        </p>
+      </section>
+
+      <div class="grid-auth">
+        <div class="card card-destaque">
+          <h2>Instalar no celular</h2>
+          <p class="descricao">
+            Abra este sistema uma vez com internet e depois adicione à tela inicial para usar como app.
+          </p>
+          <button id="botaoInstalar" class="botao-secundario oculto" type="button">Instalar app</button>
+          <div class="guia-instalacao">
+            <p><strong>Android:</strong> menu do navegador &gt; <strong>Adicionar à tela inicial</strong> ou <strong>Instalar app</strong>.</p>
+            <p><strong>iPhone:</strong> Safari &gt; <strong>Compartilhar</strong> &gt; <strong>Adicionar à Tela de Início</strong>.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Cadastrar</h2>
+          <form id="formCadastro">
+            <input type="text" id="nomeCadastro" placeholder="Nome" required>
+            <input type="email" id="emailCadastro" placeholder="Email" required>
+            <button type="submit">Cadastrar</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Entrar</h2>
+          <form id="formLogin">
+            <input type="text" id="nomeLogin" placeholder="Nome" required>
+            <input type="email" id="emailLogin" placeholder="Email" required>
+            <button type="submit">Entrar</button>
+          </form>
+        </div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>Cadastrar</h2>
-      <form id="formCadastro">
-        <input type="text" id="nomeCadastro" placeholder="Nome" required>
-        <input type="email" id="emailCadastro" placeholder="Email" required>
-        <button type="submit">Cadastrar</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>Entrar</h2>
-      <form id="formLogin">
-        <input type="text" id="nomeLogin" placeholder="Nome" required>
-        <input type="email" id="emailLogin" placeholder="Email" required>
-        <button type="submit">Entrar</button>
-      </form>
-    </div>
+    </main>
   </div>
 
   <script src="config.js"></script>
