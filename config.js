@@ -1,3 +1,3 @@
-window.MODELAGE_CONFIG = window.MODELAGE_CONFIG || {
-  apiBaseUrl: ""
+window.MODELAGE_CONFIG = {
+  apiBaseUrl: "https://modelage-teste.onrender.com"
 };
