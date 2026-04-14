@@ -1,0 +1,106 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+}
+
+.container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+}
+
+.descricao {
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.status-salvamento {
+  color: #86efac;
+  min-height: 24px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #22c55e;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+button:hover {
+  background: #16a34a;
+}
+
+.botao-secundario {
+  background: #334155;
+}
+
+.botao-secundario:hover {
+  background: #475569;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.acoes-formulario {
+  display: flex;
+  gap: 8px;
+}
+
+li button {
+  width: auto;
+  margin-bottom: 0;
+}
+
+.botao-abrir {
+  background: #22c55e;
+}
+
+.botao-abrir:hover {
+  background: #16a34a;
+}
+
+.botao-excluir {
+  background: #ef4444;
+}
+
+.botao-excluir:hover {
+  background: #dc2626;
+}

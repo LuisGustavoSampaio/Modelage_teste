@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Bem-vindo!</h1>
+    <p id="boasVindas"></p>
+
+    <hr>
+
+    <h2>Criar formulário</h2>
+    <p class="descricao">
+      Crie formulários em formato de documento, com título e espaço livre para texto.
+    </p>
+
+    <input type="text" id="nomeFormulario" placeholder="Título do formulário">
+    <button onclick="salvarFormulario()">Salvar formulário</button>
+
+    <h3>Meus formulários:</h3>
+    <ul id="listaFormularios"></ul>
+
+    <hr>
+
+    <button class="botao-secundario" onclick="logout()">Sair</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
