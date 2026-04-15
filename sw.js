@@ -59,18 +59,29 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     (async function() {
       if (isNavigation) {
+        const pathname = requestUrl.pathname.toLowerCase();
+
         try {
           const response = await fetch(event.request);
           const cache = await caches.open(CACHE_NAME);
           cache.put(event.request, response.clone());
           return response;
         } catch (error) {
+          let routeFallback = "index.html";
+
+          if (pathname === "/home" || pathname === "/home.html") {
+            routeFallback = "home.html";
+          } else if (pathname === "/formulario" || pathname === "/formulario.html") {
+            routeFallback = "formulario.html";
+          }
+
           const cachedNavigation =
+            await caches.match(routeFallback) ||
             await caches.match(event.request, { ignoreSearch: true }) ||
             await caches.match(requestUrl.pathname, { ignoreSearch: true }) ||
+            await caches.match("index.html") ||
             await caches.match("/") ||
-            await caches.match("./") ||
-            await caches.match("index.html");
+            await caches.match("./");
 
           if (cachedNavigation) {
             return cachedNavigation;
