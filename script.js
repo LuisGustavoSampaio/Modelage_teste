@@ -19,7 +19,8 @@ window.onload = function() {
     respostas: "respostas",
     operacoes: "operacoesPendentes",
     ultimaSincronizacao: "ultimaSincronizacao",
-    deviceId: "deviceId"
+    deviceId: "deviceId",
+    ultimaTela: "ultimaTela"
   };
 
   const rawApiBaseUrl = (window.MODELAGE_CONFIG && window.MODELAGE_CONFIG.apiBaseUrl) || "";
@@ -252,6 +253,14 @@ window.onload = function() {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.usuarioLogado));
   }
 
+  function salvarUltimaTela(tela) {
+    localStorage.setItem(STORAGE_KEYS.ultimaTela, tela);
+  }
+
+  function pegarUltimaTela() {
+    return localStorage.getItem(STORAGE_KEYS.ultimaTela);
+  }
+
   function salvarUsuarioLogado(usuario) {
     localStorage.setItem(STORAGE_KEYS.usuarioLogado, JSON.stringify(usuario));
   }
@@ -268,7 +277,13 @@ window.onload = function() {
   }
 
   if ((formCadastro || formLogin) && pegarUsuarioLogado()) {
-    window.location.href = "home.html";
+    const ultimaTela = pegarUltimaTela();
+
+    if (ultimaTela === "formulario.html" && localStorage.getItem("formSelecionado")) {
+      window.location.href = "formulario.html";
+    } else {
+      window.location.href = "home.html";
+    }
     return;
   }
 
@@ -426,6 +441,7 @@ window.onload = function() {
 
   window.logout = function() {
     localStorage.removeItem(STORAGE_KEYS.usuarioLogado);
+    localStorage.removeItem(STORAGE_KEYS.ultimaTela);
     window.location.href = "index.html";
   };
 
@@ -434,6 +450,8 @@ window.onload = function() {
   };
 
   if (formCadastro) {
+    salvarUltimaTela("index.html");
+
     formCadastro.addEventListener("submit", async function(e) {
       e.preventDefault();
 
@@ -464,6 +482,8 @@ window.onload = function() {
   }
 
   if (formLogin) {
+    salvarUltimaTela("index.html");
+
     formLogin.addEventListener("submit", async function(e) {
       e.preventDefault();
 
@@ -504,6 +524,8 @@ window.onload = function() {
   });
 
   if (boasVindas) {
+    salvarUltimaTela("home.html");
+
     const usuario = exigirUsuarioLogado();
 
     if (!usuario) {
@@ -664,6 +686,8 @@ window.onload = function() {
   }
 
   if (formDinamico) {
+    salvarUltimaTela("formulario.html");
+
     const usuario = exigirUsuarioLogado();
     const statusSalvamento = document.getElementById("statusSalvamento");
 
