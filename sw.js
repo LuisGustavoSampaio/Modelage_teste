@@ -1,7 +1,18 @@
-const CACHE_NAME = "modelage-cache-v4";
+const CACHE_NAME = "modelage-cache-v5";
 const ARQUIVOS_ESSENCIAIS = [
   "./",
   "/",
+  "/index.html",
+  "/home.html",
+  "/formulario.html",
+  "/offline.html",
+  "/style.css",
+  "/config.js",
+  "/script.js",
+  "/manifest.json",
+  "/sw.js",
+  "/icons/icon-192.svg",
+  "/icons/icon-512.svg",
   "index.html",
   "home.html",
   "formulario.html",
@@ -66,17 +77,18 @@ self.addEventListener("fetch", event => {
           return response;
         } catch (error) {
           const cachedNavigation =
+            await caches.match("/index.html") ||
             await caches.match("index.html") ||
-            await caches.match(event.request, { ignoreSearch: true }) ||
-            await caches.match(requestUrl.pathname, { ignoreSearch: true }) ||
             await caches.match("/") ||
-            await caches.match("./");
+            await caches.match("./") ||
+            await caches.match(event.request, { ignoreSearch: true }) ||
+            await caches.match(requestUrl.pathname, { ignoreSearch: true });
 
           if (cachedNavigation) {
             return cachedNavigation;
           }
 
-          return caches.match("offline.html");
+          return caches.match("/offline.html") || caches.match("offline.html");
         }
       }
 
