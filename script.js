@@ -574,8 +574,8 @@ window.onload = function() {
     }
 
     intervaloSyncAtivo = window.setInterval(function() {
-      sincronizarEmSegundoPlano(10000);
-    }, 15000);
+      sincronizarEmSegundoPlano(5000);
+    }, 8000);
   }
 
   function pararRotinaDeSincronizacao() {
@@ -637,7 +637,7 @@ window.onload = function() {
         }).finally(function() {
           temporizadorAutoSalvar = null;
         });
-      }, 1200);
+      }, 700);
     });
 
     formDinamico.appendChild(campoTexto);
