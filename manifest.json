@@ -1,7 +1,7 @@
 {
   "name": "Modelage Offline",
   "short_name": "Modelage",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

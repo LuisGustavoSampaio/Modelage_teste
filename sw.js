@@ -1,6 +1,7 @@
-const CACHE_NAME = "modelage-cache-v3";
+const CACHE_NAME = "modelage-cache-v4";
 const ARQUIVOS_ESSENCIAIS = [
   "./",
+  "/",
   "index.html",
   "home.html",
   "formulario.html",
@@ -47,32 +48,55 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  const requestUrl = new URL(event.request.url);
+  const isSameOrigin = requestUrl.origin === self.location.origin;
+  const isNavigation = event.request.mode === "navigate";
+
+  if (!isSameOrigin) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        const respostaClonada = response.clone();
+    (async function() {
+      if (isNavigation) {
+        try {
+          const response = await fetch(event.request);
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
+          return response;
+        } catch (error) {
+          const cachedNavigation =
+            await caches.match(event.request, { ignoreSearch: true }) ||
+            await caches.match(requestUrl.pathname, { ignoreSearch: true }) ||
+            await caches.match("/") ||
+            await caches.match("./") ||
+            await caches.match("index.html");
 
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, respostaClonada);
-        });
+          if (cachedNavigation) {
+            return cachedNavigation;
+          }
 
+          return caches.match("offline.html");
+        }
+      }
+
+      const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      try {
+        const response = await fetch(event.request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, response.clone());
         return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then(response => {
-          if (response) {
-            return response;
-          }
-
-          if (event.request.mode === "navigate") {
-            return caches.match("offline.html");
-          }
-
-          return new Response("Recurso indisponível offline.", {
-            status: 503,
-            statusText: "Offline"
-          });
+      } catch (error) {
+        return new Response("Recurso indisponível offline.", {
+          status: 503,
+          statusText: "Offline"
         });
-      })
+      }
+    })()
   );
 });
