@@ -24,6 +24,7 @@ window.onload = function() {
   let eventoInstalacao = null;
   let sincronizacaoEmAndamento = null;
   let formularioAbertoId = null;
+  let ultimaTentativaSync = 0;
 
   const STORAGE_KEYS = {
     usuarios: "usuarios",
@@ -361,6 +362,26 @@ window.onload = function() {
     }
   }
 
+  function podeTentarSincronizar(intervaloMinimo) {
+    const usuario = pegarUsuarioLogado();
+    const agora = Date.now();
+
+    if (!usuario || !navigator.onLine) {
+      return false;
+    }
+
+    if (sincronizacaoEmAndamento) {
+      return false;
+    }
+
+    if (intervaloMinimo && agora - ultimaTentativaSync < intervaloMinimo) {
+      return false;
+    }
+
+    ultimaTentativaSync = agora;
+    return true;
+  }
+
   async function sincronizarComServidor() {
     if (sincronizacaoEmAndamento) {
       return sincronizacaoEmAndamento;
@@ -440,6 +461,16 @@ window.onload = function() {
     }
 
     return sincronizarComServidor();
+  }
+
+  function sincronizarEmSegundoPlano(intervaloMinimo) {
+    if (!podeTentarSincronizar(intervaloMinimo || 0)) {
+      return;
+    }
+
+    sincronizarComServidor().catch(function(error) {
+      console.error(error);
+    });
   }
 
   function renderFormularioAtual() {
@@ -586,6 +617,10 @@ window.onload = function() {
     }
 
     showTela("home");
+
+    if (navigator.onLine) {
+      sincronizarEmSegundoPlano(3000);
+    }
   }
 
   atualizarTelaAtual = function() {
@@ -662,6 +697,7 @@ window.onload = function() {
     }
 
       salvarUsuarioLogado(usuario);
+      await sincronizarSePossivel();
       formularioAbertoId = localStorage.getItem("formSelecionado");
       renderHome();
     });
@@ -795,6 +831,21 @@ window.onload = function() {
   } else {
     atualizarStatusSync("Modo offline ativo.", "warning");
   }
+
+  window.addEventListener("online", function() {
+    atualizarStatusSync("Conexão restaurada. Tentando sincronizar.", "warning");
+    sincronizarEmSegundoPlano(0);
+  });
+
+  window.addEventListener("focus", function() {
+    sincronizarEmSegundoPlano(5000);
+  });
+
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+      sincronizarEmSegundoPlano(5000);
+    }
+  });
 
   atualizarTelaAtual();
 };
