@@ -604,8 +604,9 @@ window.onload = function() {
     }
   };
 
-  formCadastro.addEventListener("submit", async function(e) {
-    e.preventDefault();
+  if (formCadastro) {
+    formCadastro.addEventListener("submit", async function(e) {
+      e.preventDefault();
 
     const nome = document.getElementById("nomeCadastro").value.trim();
     const email = document.getElementById("emailCadastro").value.trim().toLowerCase();
@@ -629,11 +630,13 @@ window.onload = function() {
 
     alert("Cadastro realizado!");
     formCadastro.reset();
-    await sincronizarSePossivel();
-  });
+      await sincronizarSePossivel();
+    });
+  }
 
-  formLogin.addEventListener("submit", async function(e) {
-    e.preventDefault();
+  if (formLogin) {
+    formLogin.addEventListener("submit", async function(e) {
+      e.preventDefault();
 
     const nome = document.getElementById("nomeLogin").value.trim();
     const email = document.getElementById("emailLogin").value.trim().toLowerCase();
@@ -658,13 +661,15 @@ window.onload = function() {
       return;
     }
 
-    salvarUsuarioLogado(usuario);
-    formularioAbertoId = localStorage.getItem("formSelecionado");
-    renderHome();
-  });
+      salvarUsuarioLogado(usuario);
+      formularioAbertoId = localStorage.getItem("formSelecionado");
+      renderHome();
+    });
+  }
 
-  botaoSalvarFormulario.addEventListener("click", async function() {
-    const usuario = pegarUsuarioLogado();
+  if (botaoSalvarFormulario) {
+    botaoSalvarFormulario.addEventListener("click", async function() {
+      const usuario = pegarUsuarioLogado();
     const nome = nomeFormularioInput.value.trim();
 
     if (!usuario) {
@@ -695,12 +700,14 @@ window.onload = function() {
 
     nomeFormularioInput.value = "";
     alert("Formulário salvo localmente.");
-    renderHome();
-    await sincronizarSePossivel();
-  });
+      renderHome();
+      await sincronizarSePossivel();
+    });
+  }
 
-  botaoSalvarConteudo.addEventListener("click", async function() {
-    const usuario = pegarUsuarioLogado();
+  if (botaoSalvarConteudo) {
+    botaoSalvarConteudo.addEventListener("click", async function() {
+      const usuario = pegarUsuarioLogado();
     const campoTexto = document.getElementById("conteudoFormulario");
     const conteudo = campoTexto ? campoTexto.value.trim() : "";
     const formularios = pegarFormularios().filter(function(formulario) {
@@ -759,22 +766,29 @@ window.onload = function() {
     atualizarBadge(statusBadgeFormulario, "Salvo local", "warning");
 
     alert("Conteúdo salvo offline com sucesso.");
-    await sincronizarSePossivel();
-    renderFormularioAtual();
-  });
+      await sincronizarSePossivel();
+      renderFormularioAtual();
+    });
+  }
 
-  botaoVoltarHome.addEventListener("click", function() {
-    renderHome();
-  });
+  if (botaoVoltarHome) {
+    botaoVoltarHome.addEventListener("click", function() {
+      renderHome();
+    });
+  }
 
-  botaoSyncManual.addEventListener("click", async function() {
-    await sincronizarComServidor();
-  });
+  if (botaoSyncManual) {
+    botaoSyncManual.addEventListener("click", async function() {
+      await sincronizarComServidor();
+    });
+  }
 
-  botaoSair.addEventListener("click", function() {
-    limparSessao();
-    showTela("auth");
-  });
+  if (botaoSair) {
+    botaoSair.addEventListener("click", function() {
+      limparSessao();
+      showTela("auth");
+    });
+  }
 
   if (navigator.onLine) {
     sincronizarComServidor();
