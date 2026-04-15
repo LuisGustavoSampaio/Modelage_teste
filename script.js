@@ -26,6 +26,7 @@ window.onload = function() {
   let formularioAbertoId = null;
   let ultimaTentativaSync = 0;
   let intervaloSyncAtivo = null;
+  let temporizadorAutoSalvar = null;
 
   const STORAGE_KEYS = {
     usuarios: "usuarios",
@@ -294,6 +295,10 @@ window.onload = function() {
     localStorage.removeItem(STORAGE_KEYS.ultimaTela);
     localStorage.removeItem("formSelecionado");
     formularioAbertoId = null;
+    if (temporizadorAutoSalvar) {
+      window.clearTimeout(temporizadorAutoSalvar);
+      temporizadorAutoSalvar = null;
+    }
     if (intervaloSyncAtivo) {
       window.clearInterval(intervaloSyncAtivo);
       intervaloSyncAtivo = null;
@@ -387,6 +392,11 @@ window.onload = function() {
     return true;
   }
 
+  function estaEditandoFormulario() {
+    const campoTexto = document.getElementById("conteudoFormulario");
+    return !!campoTexto && document.activeElement === campoTexto;
+  }
+
   async function sincronizarComServidor() {
     if (sincronizacaoEmAndamento) {
       return sincronizacaoEmAndamento;
@@ -478,6 +488,86 @@ window.onload = function() {
     });
   }
 
+  async function salvarConteudoFormularioAtual(opcoes) {
+    const configuracao = Object.assign({
+      silencioso: false,
+      dispararSync: true
+    }, opcoes || {});
+
+    const usuario = pegarUsuarioLogado();
+    const campoTexto = document.getElementById("conteudoFormulario");
+    const conteudo = campoTexto ? campoTexto.value.trim() : "";
+    const formularios = pegarFormularios().filter(function(formulario) {
+      return usuario && formulario.email === usuario.email && !formulario.deleted;
+    });
+    const formulario = formularios.find(function(item) {
+      return item.id === formularioAbertoId;
+    });
+
+    if (!usuario || !formulario) {
+      renderHome();
+      return false;
+    }
+
+    if (!conteudo) {
+      if (!configuracao.silencioso) {
+        alert("Preencha o conteudo antes de salvar.");
+      }
+
+      return false;
+    }
+
+    const momento = agoraIso();
+    const respostas = pegarRespostas();
+    let resposta = buscarRespostaDoFormulario(formulario.id, usuario.email);
+
+    if (resposta) {
+      resposta = Object.assign({}, resposta, {
+        conteudo: conteudo,
+        deleted: false,
+        updatedAt: momento
+      });
+
+      const respostasAtualizadas = respostas.map(function(item) {
+        return item.id === resposta.id ? resposta : item;
+      });
+
+      salvarRespostas(respostasAtualizadas);
+    } else {
+      resposta = {
+        id: criarId("resp"),
+        formularioId: formulario.id,
+        formulario: formulario.nome,
+        conteudo: conteudo,
+        autor: usuario.nome,
+        autorId: usuario.id,
+        email: usuario.email,
+        deleted: false,
+        createdAt: momento,
+        updatedAt: momento
+      };
+
+      respostas.push(resposta);
+      salvarRespostas(respostas);
+    }
+
+    registrarOperacao("resposta", "upsert", resposta);
+    statusSalvamento.textContent = configuracao.silencioso
+      ? "Salvo automaticamente em " + formatarData(momento) + "."
+      : "Conteudo salvo em " + formatarData(momento) + ".";
+    atualizarBadge(statusBadgeFormulario, "Salvo local", "warning");
+
+    if (!configuracao.silencioso) {
+      alert("Conteudo salvo com sucesso.");
+    }
+
+    if (configuracao.dispararSync) {
+      await sincronizarSePossivel();
+    }
+
+    return true;
+  }
+
   function iniciarRotinaDeSincronizacao() {
     if (intervaloSyncAtivo || !pegarUsuarioLogado()) {
       return;
@@ -531,6 +621,24 @@ window.onload = function() {
       statusSalvamento.textContent = "Sem conteúdo salvo ainda.";
       atualizarBadge(statusBadgeFormulario, "Rascunho", "warning");
     }
+
+    campoTexto.addEventListener("input", function() {
+      atualizarBadge(statusBadgeFormulario, "Digitando", "warning");
+      statusSalvamento.textContent = "Alteracoes locais serao salvas automaticamente.";
+
+      if (temporizadorAutoSalvar) {
+        window.clearTimeout(temporizadorAutoSalvar);
+      }
+
+      temporizadorAutoSalvar = window.setTimeout(function() {
+        salvarConteudoFormularioAtual({
+          silencioso: true,
+          dispararSync: true
+        }).finally(function() {
+          temporizadorAutoSalvar = null;
+        });
+      }, 1200);
+    });
 
     formDinamico.appendChild(campoTexto);
     showTela("formulario");
@@ -773,6 +881,17 @@ window.onload = function() {
 
   if (botaoSalvarConteudo) {
     botaoSalvarConteudo.addEventListener("click", async function() {
+      if (temporizadorAutoSalvar) {
+        window.clearTimeout(temporizadorAutoSalvar);
+        temporizadorAutoSalvar = null;
+      }
+
+      await salvarConteudoFormularioAtual({
+        silencioso: false,
+        dispararSync: true
+      });
+      return;
+
       const usuario = pegarUsuarioLogado();
     const campoTexto = document.getElementById("conteudoFormulario");
     const conteudo = campoTexto ? campoTexto.value.trim() : "";
