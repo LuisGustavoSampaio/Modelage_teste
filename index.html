@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
-  <title>Login / Cadastro</title>
+  <title>Modelage Offline</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.svg">
   <link rel="stylesheet" href="style.css">
@@ -15,45 +15,132 @@
     <div class="glow glow-right"></div>
 
     <main class="container">
-      <section class="hero hero-auth">
-        <span class="eyebrow">Modelage Offline</span>
-        <h1>Sistema de formulários que continua funcionando mesmo sem internet</h1>
-        <p class="hero-copy">
-          Crie, preencha e sincronize relatórios textuais com uma experiência pensada para uso em campo.
-        </p>
-      </section>
-
-      <div class="grid-auth">
-        <div class="card card-destaque">
-          <h2>Instalar no celular</h2>
-          <p class="descricao">
-            Abra este sistema uma vez com internet e depois adicione à tela inicial para usar como app.
+      <section id="telaAuth">
+        <section class="hero hero-auth">
+          <span class="eyebrow">Modelage Offline</span>
+          <h1>Sistema de formulários que continua funcionando mesmo sem internet</h1>
+          <p class="hero-copy">
+            Crie, preencha e sincronize relatórios textuais com uma experiência pensada para uso em campo.
           </p>
-          <button id="botaoInstalar" class="botao-secundario oculto" type="button">Instalar app</button>
-          <div class="guia-instalacao">
-            <p><strong>Android:</strong> menu do navegador &gt; <strong>Adicionar à tela inicial</strong> ou <strong>Instalar app</strong>.</p>
-            <p><strong>iPhone:</strong> Safari &gt; <strong>Compartilhar</strong> &gt; <strong>Adicionar à Tela de Início</strong>.</p>
+        </section>
+
+        <div class="grid-auth">
+          <div class="card card-destaque">
+            <h2>Instalar no celular</h2>
+            <p class="descricao">
+              Abra este sistema uma vez com internet e depois adicione à tela inicial para usar como app.
+            </p>
+            <button class="botao-secundario oculto js-install-app" type="button">Instalar app</button>
+            <div class="guia-instalacao">
+              <p><strong>Android:</strong> menu do navegador &gt; <strong>Adicionar à tela inicial</strong> ou <strong>Instalar app</strong>.</p>
+              <p><strong>iPhone:</strong> Safari &gt; <strong>Compartilhar</strong> &gt; <strong>Adicionar à Tela de Início</strong>.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Cadastrar</h2>
+            <form id="formCadastro">
+              <input type="text" id="nomeCadastro" placeholder="Nome" required>
+              <input type="email" id="emailCadastro" placeholder="Email" required>
+              <button type="submit">Cadastrar</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Entrar</h2>
+            <form id="formLogin">
+              <input type="text" id="nomeLogin" placeholder="Nome" required>
+              <input type="email" id="emailLogin" placeholder="Email" required>
+              <button type="submit">Entrar</button>
+            </form>
           </div>
         </div>
+      </section>
 
-        <div class="card">
-          <h2>Cadastrar</h2>
-          <form id="formCadastro">
-            <input type="text" id="nomeCadastro" placeholder="Nome" required>
-            <input type="email" id="emailCadastro" placeholder="Email" required>
-            <button type="submit">Cadastrar</button>
-          </form>
+      <section id="telaHome" class="oculto">
+        <section class="hero hero-home">
+          <div>
+            <span class="eyebrow">Painel principal</span>
+            <h1>Bem-vindo!</h1>
+            <p id="boasVindas" class="hero-copy"></p>
+          </div>
+          <button class="botao-secundario botao-topo" id="botaoSair" type="button">Sair</button>
+        </section>
+
+        <section class="painel-sync">
+          <div class="painel-sync__topo">
+            <div>
+              <span class="eyebrow">Sincronização</span>
+              <h2>Seu trabalho está protegido</h2>
+            </div>
+            <button class="botao-secundario botao-sync" id="botaoSyncManual" type="button">Sincronizar agora</button>
+          </div>
+          <p class="descricao">
+            O app sincroniza sozinho sempre que consegue. Use o botão apenas para forçar uma nova tentativa.
+          </p>
+          <p class="descricao texto-suave" id="apiInfo"></p>
+          <div class="status-bar">
+            <span class="status-badge" id="statusBadge">Aguardando</span>
+            <p class="status-sync" id="statusSync"></p>
+          </div>
+        </section>
+
+        <div class="grid-home">
+          <section class="card card-destaque">
+            <h2>Instalar como app</h2>
+            <p class="descricao">
+              Depois da primeira carga online, abra pelo ícone na tela inicial para um uso offline mais confiável.
+            </p>
+            <button class="botao-secundario oculto js-install-app" type="button">Instalar app</button>
+            <div class="guia-instalacao">
+              <p><strong>Android:</strong> menu do navegador &gt; <strong>Adicionar à tela inicial</strong> ou <strong>Instalar app</strong>.</p>
+              <p><strong>iPhone:</strong> Safari &gt; <strong>Compartilhar</strong> &gt; <strong>Adicionar à Tela de Início</strong>.</p>
+            </div>
+          </section>
+
+          <section class="card card-form-builder">
+            <span class="eyebrow">Novo formulário</span>
+            <h2>Criar formulário</h2>
+            <p class="descricao">
+              Monte formulários em formato de documento, com título e espaço livre para texto.
+            </p>
+            <input type="text" id="nomeFormulario" placeholder="Título do formulário">
+            <button id="botaoSalvarFormulario" type="button">Salvar formulário</button>
+          </section>
         </div>
 
-        <div class="card">
-          <h2>Entrar</h2>
-          <form id="formLogin">
-            <input type="text" id="nomeLogin" placeholder="Nome" required>
-            <input type="email" id="emailLogin" placeholder="Email" required>
-            <button type="submit">Entrar</button>
-          </form>
-        </div>
-      </div>
+        <section class="card card-lista">
+          <div class="card-lista__topo">
+            <div>
+              <span class="eyebrow">Biblioteca</span>
+              <h2>Meus formulários</h2>
+            </div>
+          </div>
+          <ul id="listaFormularios"></ul>
+        </section>
+      </section>
+
+      <section id="telaFormulario" class="oculto">
+        <section class="hero hero-form">
+          <span class="eyebrow">Editor de registro</span>
+          <h1 id="tituloFormulario">Formulário</h1>
+          <p class="descricao hero-copy" id="descricaoFormulario">
+            Preencha este formulário como um documento ou relatório.
+          </p>
+        </section>
+
+        <section class="card card-editor">
+          <div class="status-bar status-bar-editor">
+            <span class="status-badge" id="statusBadgeFormulario">Rascunho</span>
+            <p class="status-salvamento" id="statusSalvamento"></p>
+          </div>
+          <form id="formDinamico"></form>
+          <div class="acoes-editor">
+            <button type="button" id="botaoSalvarConteudo">Salvar conteúdo</button>
+            <button type="button" class="botao-secundario" id="botaoVoltarHome">Voltar</button>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 

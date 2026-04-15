@@ -1,16 +1,29 @@
 window.onload = function() {
+  const telaAuth = document.getElementById("telaAuth");
+  const telaHome = document.getElementById("telaHome");
+  const telaFormulario = document.getElementById("telaFormulario");
   const formCadastro = document.getElementById("formCadastro");
   const formLogin = document.getElementById("formLogin");
   const boasVindas = document.getElementById("boasVindas");
   const formDinamico = document.getElementById("formDinamico");
   const statusSync = document.getElementById("statusSync");
   const statusBadge = document.getElementById("statusBadge");
-  const botaoInstalar = document.getElementById("botaoInstalar");
   const apiInfo = document.getElementById("apiInfo");
   const statusBadgeFormulario = document.getElementById("statusBadgeFormulario");
+  const statusSalvamento = document.getElementById("statusSalvamento");
+  const tituloFormulario = document.getElementById("tituloFormulario");
+  const nomeFormularioInput = document.getElementById("nomeFormulario");
+  const listaFormularios = document.getElementById("listaFormularios");
+  const botaoSalvarFormulario = document.getElementById("botaoSalvarFormulario");
+  const botaoSalvarConteudo = document.getElementById("botaoSalvarConteudo");
+  const botaoVoltarHome = document.getElementById("botaoVoltarHome");
+  const botaoSyncManual = document.getElementById("botaoSyncManual");
+  const botaoSair = document.getElementById("botaoSair");
+  const botoesInstalar = Array.from(document.querySelectorAll(".js-install-app"));
+
   let eventoInstalacao = null;
   let sincronizacaoEmAndamento = null;
-  let atualizarTelaAtual = function() {};
+  let formularioAbertoId = null;
 
   const STORAGE_KEYS = {
     usuarios: "usuarios",
@@ -31,6 +44,23 @@ window.onload = function() {
     return API_BASE_URL ? API_BASE_URL + rota : rota;
   }
 
+  function showTela(nome) {
+    telaAuth.classList.add("oculto");
+    telaHome.classList.add("oculto");
+    telaFormulario.classList.add("oculto");
+
+    if (nome === "home") {
+      telaHome.classList.remove("oculto");
+      localStorage.setItem(STORAGE_KEYS.ultimaTela, "home");
+    } else if (nome === "formulario") {
+      telaFormulario.classList.remove("oculto");
+      localStorage.setItem(STORAGE_KEYS.ultimaTela, "formulario");
+    } else {
+      telaAuth.classList.remove("oculto");
+      localStorage.setItem(STORAGE_KEYS.ultimaTela, "auth");
+    }
+  }
+
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
       navigator.serviceWorker.register("sw.js").catch(function(error) {
@@ -48,22 +78,20 @@ window.onload = function() {
   window.addEventListener("beforeinstallprompt", function(event) {
     event.preventDefault();
     eventoInstalacao = event;
-
-    if (botaoInstalar) {
-      botaoInstalar.classList.remove("oculto");
-    }
+    botoesInstalar.forEach(function(botao) {
+      botao.classList.remove("oculto");
+    });
   });
 
   window.addEventListener("appinstalled", function() {
     eventoInstalacao = null;
-
-    if (botaoInstalar) {
-      botaoInstalar.classList.add("oculto");
-    }
+    botoesInstalar.forEach(function(botao) {
+      botao.classList.add("oculto");
+    });
   });
 
-  if (botaoInstalar) {
-    botaoInstalar.addEventListener("click", async function() {
+  botoesInstalar.forEach(function(botao) {
+    botao.addEventListener("click", async function() {
       if (!eventoInstalacao) {
         alert("Use a opção 'Adicionar à tela inicial' do navegador para instalar este app.");
         return;
@@ -72,9 +100,11 @@ window.onload = function() {
       eventoInstalacao.prompt();
       await eventoInstalacao.userChoice;
       eventoInstalacao = null;
-      botaoInstalar.classList.add("oculto");
+      botoesInstalar.forEach(function(item) {
+        item.classList.add("oculto");
+      });
     });
-  }
+  });
 
   function criarId(prefixo) {
     return prefixo + "_" + Date.now() + "_" + Math.random().toString(16).slice(2);
@@ -126,7 +156,7 @@ window.onload = function() {
     const usuarios = lerLista(STORAGE_KEYS.usuarios);
     let alterou = false;
 
-    usuarios.forEach(usuario => {
+    usuarios.forEach(function(usuario) {
       if (!usuario.id) {
         usuario.id = criarId("user");
         alterou = true;
@@ -149,7 +179,7 @@ window.onload = function() {
     const formularios = lerLista(STORAGE_KEYS.formularios);
     let alterou = false;
 
-    formularios.forEach(formulario => {
+    formularios.forEach(function(formulario) {
       if (!formulario.id) {
         formulario.id = criarId("form");
         alterou = true;
@@ -177,7 +207,7 @@ window.onload = function() {
     const respostas = lerLista(STORAGE_KEYS.respostas);
     let alterou = false;
 
-    respostas.forEach(resposta => {
+    respostas.forEach(function(resposta) {
       if (!resposta.id) {
         resposta.id = criarId("resp");
         alterou = true;
@@ -253,38 +283,15 @@ window.onload = function() {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.usuarioLogado));
   }
 
-  function salvarUltimaTela(tela) {
-    localStorage.setItem(STORAGE_KEYS.ultimaTela, tela);
-  }
-
-  function pegarUltimaTela() {
-    return localStorage.getItem(STORAGE_KEYS.ultimaTela);
-  }
-
   function salvarUsuarioLogado(usuario) {
     localStorage.setItem(STORAGE_KEYS.usuarioLogado, JSON.stringify(usuario));
   }
 
-  function exigirUsuarioLogado() {
-    const usuario = pegarUsuarioLogado();
-
-    if (!usuario) {
-      window.location.href = "index.html";
-      return null;
-    }
-
-    return usuario;
-  }
-
-  if ((formCadastro || formLogin) && pegarUsuarioLogado()) {
-    const ultimaTela = pegarUltimaTela();
-
-    if (ultimaTela === "formulario.html" && localStorage.getItem("formSelecionado")) {
-      window.location.href = "formulario.html";
-    } else {
-      window.location.href = "home.html";
-    }
-    return;
+  function limparSessao() {
+    localStorage.removeItem(STORAGE_KEYS.usuarioLogado);
+    localStorage.removeItem(STORAGE_KEYS.ultimaTela);
+    localStorage.removeItem("formSelecionado");
+    formularioAbertoId = null;
   }
 
   function buscarRespostaDoFormulario(formularioId, email) {
@@ -435,217 +442,65 @@ window.onload = function() {
     return sincronizarComServidor();
   }
 
-  window.sincronizarAgora = async function() {
-    await sincronizarComServidor();
-  };
-
-  window.logout = function() {
-    localStorage.removeItem(STORAGE_KEYS.usuarioLogado);
-    localStorage.removeItem(STORAGE_KEYS.ultimaTela);
-    window.location.href = "index.html";
-  };
-
-  window.voltar = function() {
-    window.location.href = "home.html";
-  };
-
-  if (formCadastro) {
-    salvarUltimaTela("index.html");
-
-    formCadastro.addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const nome = document.getElementById("nomeCadastro").value.trim();
-      const email = document.getElementById("emailCadastro").value.trim().toLowerCase();
-      const usuarios = pegarUsuarios();
-
-      if (usuarios.some(function(usuario) { return usuario.email === email; })) {
-        alert("Email já cadastrado!");
-        return;
-      }
-
-      const usuario = {
-        id: criarId("user"),
-        nome: nome,
-        email: email,
-        updatedAt: agoraIso()
-      };
-
-      usuarios.push(usuario);
-      salvarUsuarios(usuarios);
-      registrarOperacao("usuario", "upsert", usuario);
-
-      alert("Cadastro realizado!");
-      formCadastro.reset();
-      await sincronizarSePossivel();
+  function renderFormularioAtual() {
+    const usuario = pegarUsuarioLogado();
+    const formularios = pegarFormularios().filter(function(formulario) {
+      return usuario && formulario.email === usuario.email && !formulario.deleted;
     });
-  }
-
-  if (formLogin) {
-    salvarUltimaTela("index.html");
-
-    formLogin.addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const nome = document.getElementById("nomeLogin").value.trim();
-      const email = document.getElementById("emailLogin").value.trim().toLowerCase();
-      let usuarios = pegarUsuarios();
-      let usuario = usuarios.find(function(item) {
-        return item.email === email && item.nome === nome;
-      });
-
-      if (!usuario) {
-        const sincronizou = await sincronizarSePossivel();
-
-        if (sincronizou) {
-          usuarios = pegarUsuarios();
-          usuario = usuarios.find(function(item) {
-            return item.email === email && item.nome === nome;
-          });
-        }
-      }
-
-      if (!usuario) {
-        alert("Usuário não encontrado neste dispositivo nem no servidor.");
-        return;
-      }
-
-      salvarUsuarioLogado(usuario);
-      window.location.href = "home.html";
+    const formulario = formularios.find(function(item) {
+      return item.id === formularioAbertoId;
     });
+
+    if (!usuario || !formulario) {
+      formularioAbertoId = null;
+      showTela("home");
+      return;
+    }
+
+    tituloFormulario.textContent = formulario.nome;
+    formDinamico.innerHTML = "";
+
+    const campoTexto = document.createElement("textarea");
+    campoTexto.id = "conteudoFormulario";
+    campoTexto.placeholder = "Digite o conteúdo do formulário aqui...";
+    campoTexto.required = true;
+
+    const respostaExistente = buscarRespostaDoFormulario(formulario.id, usuario.email);
+
+    if (respostaExistente) {
+      campoTexto.value = respostaExistente.conteudo || "";
+      statusSalvamento.textContent =
+        "Último conteúdo salvo em " + formatarData(respostaExistente.updatedAt) + ".";
+      atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
+    } else {
+      statusSalvamento.textContent = "Sem conteúdo salvo ainda.";
+      atualizarBadge(statusBadgeFormulario, "Rascunho", "warning");
+    }
+
+    formDinamico.appendChild(campoTexto);
+    showTela("formulario");
   }
 
-  if ((formCadastro || formLogin) && navigator.onLine) {
-    sincronizarComServidor();
-  }
-
-  window.addEventListener("online", function() {
-    sincronizarComServidor();
-  });
-
-  if (boasVindas) {
-    salvarUltimaTela("home.html");
-
-    const usuario = exigirUsuarioLogado();
+  function renderHome() {
+    const usuario = pegarUsuarioLogado();
 
     if (!usuario) {
+      showTela("auth");
       return;
     }
 
     boasVindas.textContent = "Olá, " + usuario.nome;
+    listaFormularios.innerHTML = "";
 
-    atualizarTelaAtual = function() {
-      const usuarioAtualizado = pegarUsuarioLogado();
+    const formularios = pegarFormularios().filter(function(formulario) {
+      return formulario.email === usuario.email && !formulario.deleted;
+    });
 
-      if (usuarioAtualizado) {
-        boasVindas.textContent = "Olá, " + usuarioAtualizado.nome;
-      }
-
-      mostrarFormularios();
-    };
-
-    window.salvarFormulario = async function() {
-      const nome = document.getElementById("nomeFormulario").value.trim();
-
-      if (!nome) {
-        alert("Digite um título para o formulário.");
-        return;
-      }
-
-      const formulario = {
-        id: criarId("form"),
-        nome: nome,
-        tipo: "texto",
-        email: usuario.email,
-        autorId: usuario.id,
-        deleted: false,
-        createdAt: agoraIso(),
-        updatedAt: agoraIso()
-      };
-
-      const formularios = pegarFormularios();
-      formularios.push(formulario);
-      salvarFormularios(formularios);
-      registrarOperacao("formulario", "upsert", formulario);
-
-      document.getElementById("nomeFormulario").value = "";
-      mostrarFormularios();
-
-      alert("Formulário salvo localmente.");
-      await sincronizarSePossivel();
-    };
-
-    async function excluirFormulario(formularioId) {
-      const confirmar = window.confirm("Deseja excluir este formulário?");
-
-      if (!confirmar) {
-        return;
-      }
-
-      const momento = agoraIso();
-      const formularios = pegarFormularios().map(function(formulario) {
-        if (formulario.id === formularioId && formulario.email === usuario.email) {
-          return Object.assign({}, formulario, {
-            deleted: true,
-            updatedAt: momento
-          });
-        }
-
-        return formulario;
-      });
-
-      const respostas = pegarRespostas().map(function(resposta) {
-        if (resposta.formularioId === formularioId && resposta.email === usuario.email) {
-          return Object.assign({}, resposta, {
-            deleted: true,
-            updatedAt: momento
-          });
-        }
-
-        return resposta;
-      });
-
-      salvarFormularios(formularios);
-      salvarRespostas(respostas);
-
-      const formularioExcluido = formularios.find(function(formulario) {
-        return formulario.id === formularioId;
-      });
-
-      if (formularioExcluido) {
-        registrarOperacao("formulario", "delete", formularioExcluido);
-      }
-
-      respostas.forEach(function(resposta) {
-        if (resposta.formularioId === formularioId && resposta.email === usuario.email) {
-          registrarOperacao("resposta", "delete", resposta);
-        }
-      });
-
-      if (localStorage.getItem("formSelecionado") === formularioId) {
-        localStorage.removeItem("formSelecionado");
-      }
-
-      mostrarFormularios();
-      alert("Formulário marcado para exclusão e sincronização.");
-      await sincronizarSePossivel();
-    }
-
-    function mostrarFormularios() {
-      const lista = document.getElementById("listaFormularios");
-      const formularios = pegarFormularios().filter(function(formulario) {
-        return formulario.email === usuario.email && !formulario.deleted;
-      });
-
-      lista.innerHTML = "";
-
-      if (formularios.length === 0) {
-        const li = document.createElement("li");
-        li.textContent = "Nenhum formulário criado ainda.";
-        lista.appendChild(li);
-        return;
-      }
-
+    if (formularios.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum formulário criado ainda.";
+      listaFormularios.appendChild(li);
+    } else {
       formularios.forEach(function(formulario) {
         const li = document.createElement("li");
         const texto = document.createElement("span");
@@ -659,153 +514,273 @@ window.onload = function() {
         botaoAbrir.textContent = "Abrir";
         botaoAbrir.className = "botao-abrir";
         botaoAbrir.onclick = function() {
+          formularioAbertoId = formulario.id;
           localStorage.setItem("formSelecionado", formulario.id);
-          window.location.href = "formulario.html";
+          renderFormularioAtual();
         };
 
         botaoExcluir.textContent = "Excluir";
         botaoExcluir.className = "botao-excluir";
-        botaoExcluir.onclick = function() {
-          excluirFormulario(formulario.id);
+        botaoExcluir.onclick = async function() {
+          const confirmar = window.confirm("Deseja excluir este formulário?");
+
+          if (!confirmar) {
+            return;
+          }
+
+          const momento = agoraIso();
+          const formulariosAtualizados = pegarFormularios().map(function(item) {
+            if (item.id === formulario.id && item.email === usuario.email) {
+              return Object.assign({}, item, {
+                deleted: true,
+                updatedAt: momento
+              });
+            }
+
+            return item;
+          });
+
+          const respostasAtualizadas = pegarRespostas().map(function(resposta) {
+            if (resposta.formularioId === formulario.id && resposta.email === usuario.email) {
+              return Object.assign({}, resposta, {
+                deleted: true,
+                updatedAt: momento
+              });
+            }
+
+            return resposta;
+          });
+
+          salvarFormularios(formulariosAtualizados);
+          salvarRespostas(respostasAtualizadas);
+
+          const formularioExcluido = formulariosAtualizados.find(function(item) {
+            return item.id === formulario.id;
+          });
+
+          if (formularioExcluido) {
+            registrarOperacao("formulario", "delete", formularioExcluido);
+          }
+
+          respostasAtualizadas.forEach(function(resposta) {
+            if (resposta.formularioId === formulario.id && resposta.email === usuario.email) {
+              registrarOperacao("resposta", "delete", resposta);
+            }
+          });
+
+          if (formularioAbertoId === formulario.id) {
+            formularioAbertoId = null;
+          }
+
+          alert("Formulário marcado para exclusão e sincronização.");
+          renderHome();
+          await sincronizarSePossivel();
         };
 
         acoes.appendChild(botaoAbrir);
         acoes.appendChild(botaoExcluir);
         li.appendChild(texto);
         li.appendChild(acoes);
-        lista.appendChild(li);
+        listaFormularios.appendChild(li);
       });
     }
 
-    atualizarStatusSync();
-    mostrarFormularios();
-
-    if (navigator.onLine) {
-      sincronizarComServidor();
-    }
+    showTela("home");
   }
 
-  if (formDinamico) {
-    salvarUltimaTela("formulario.html");
+  atualizarTelaAtual = function() {
+    const ultimaTela = localStorage.getItem(STORAGE_KEYS.ultimaTela);
 
-    const usuario = exigirUsuarioLogado();
-    const statusSalvamento = document.getElementById("statusSalvamento");
+    if (!pegarUsuarioLogado()) {
+      showTela("auth");
+      return;
+    }
+
+    if (ultimaTela === "formulario" && (formularioAbertoId || localStorage.getItem("formSelecionado"))) {
+      formularioAbertoId = formularioAbertoId || localStorage.getItem("formSelecionado");
+      renderFormularioAtual();
+    } else {
+      renderHome();
+    }
+  };
+
+  formCadastro.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById("nomeCadastro").value.trim();
+    const email = document.getElementById("emailCadastro").value.trim().toLowerCase();
+    const usuarios = pegarUsuarios();
+
+    if (usuarios.some(function(usuario) { return usuario.email === email; })) {
+      alert("Email já cadastrado!");
+      return;
+    }
+
+    const usuario = {
+      id: criarId("user"),
+      nome: nome,
+      email: email,
+      updatedAt: agoraIso()
+    };
+
+    usuarios.push(usuario);
+    salvarUsuarios(usuarios);
+    registrarOperacao("usuario", "upsert", usuario);
+
+    alert("Cadastro realizado!");
+    formCadastro.reset();
+    await sincronizarSePossivel();
+  });
+
+  formLogin.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById("nomeLogin").value.trim();
+    const email = document.getElementById("emailLogin").value.trim().toLowerCase();
+    let usuarios = pegarUsuarios();
+    let usuario = usuarios.find(function(item) {
+      return item.email === email && item.nome === nome;
+    });
 
     if (!usuario) {
+      const sincronizou = await sincronizarSePossivel();
+
+      if (sincronizou) {
+        usuarios = pegarUsuarios();
+        usuario = usuarios.find(function(item) {
+          return item.email === email && item.nome === nome;
+        });
+      }
+    }
+
+    if (!usuario) {
+      alert("Usuário não encontrado neste dispositivo nem no servidor.");
       return;
     }
 
+    salvarUsuarioLogado(usuario);
+    formularioAbertoId = localStorage.getItem("formSelecionado");
+    renderHome();
+  });
+
+  botaoSalvarFormulario.addEventListener("click", async function() {
+    const usuario = pegarUsuarioLogado();
+    const nome = nomeFormularioInput.value.trim();
+
+    if (!usuario) {
+      showTela("auth");
+      return;
+    }
+
+    if (!nome) {
+      alert("Digite um título para o formulário.");
+      return;
+    }
+
+    const formulario = {
+      id: criarId("form"),
+      nome: nome,
+      tipo: "texto",
+      email: usuario.email,
+      autorId: usuario.id,
+      deleted: false,
+      createdAt: agoraIso(),
+      updatedAt: agoraIso()
+    };
+
+    const formularios = pegarFormularios();
+    formularios.push(formulario);
+    salvarFormularios(formularios);
+    registrarOperacao("formulario", "upsert", formulario);
+
+    nomeFormularioInput.value = "";
+    alert("Formulário salvo localmente.");
+    renderHome();
+    await sincronizarSePossivel();
+  });
+
+  botaoSalvarConteudo.addEventListener("click", async function() {
+    const usuario = pegarUsuarioLogado();
+    const campoTexto = document.getElementById("conteudoFormulario");
+    const conteudo = campoTexto ? campoTexto.value.trim() : "";
     const formularios = pegarFormularios().filter(function(formulario) {
-      return formulario.email === usuario.email && !formulario.deleted;
+      return usuario && formulario.email === usuario.email && !formulario.deleted;
     });
-    const formularioIdSelecionado = localStorage.getItem("formSelecionado");
     const formulario = formularios.find(function(item) {
-      return item.id === formularioIdSelecionado;
+      return item.id === formularioAbertoId;
     });
 
-    if (!formulario) {
-      alert("Formulário não encontrado.");
-      window.location.href = "home.html";
+    if (!usuario || !formulario) {
+      renderHome();
       return;
     }
 
-    document.getElementById("tituloFormulario").textContent = formulario.nome;
+    if (!conteudo) {
+      alert("Preencha o conteúdo antes de salvar.");
+      return;
+    }
 
-    const campoTexto = document.createElement("textarea");
-    campoTexto.id = "conteudoFormulario";
-    campoTexto.placeholder = "Digite o conteúdo do formulário aqui...";
-    campoTexto.required = true;
+    const momento = agoraIso();
+    const respostas = pegarRespostas();
+    let resposta = buscarRespostaDoFormulario(formulario.id, usuario.email);
 
-    formDinamico.appendChild(campoTexto);
+    if (resposta) {
+      resposta = Object.assign({}, resposta, {
+        conteudo: conteudo,
+        deleted: false,
+        updatedAt: momento
+      });
 
-    const respostaExistente = buscarRespostaDoFormulario(formulario.id, usuario.email);
+      const respostasAtualizadas = respostas.map(function(item) {
+        return item.id === resposta.id ? resposta : item;
+      });
 
-    atualizarTelaAtual = function() {
-      const respostaAtualizada = buscarRespostaDoFormulario(formulario.id, usuario.email);
-
-      if (respostaAtualizada) {
-        campoTexto.value = respostaAtualizada.conteudo || "";
-
-        if (statusSalvamento) {
-          statusSalvamento.textContent =
-            "Último conteúdo salvo em " + formatarData(respostaAtualizada.updatedAt) + ".";
-        }
-
-        atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
-      }
-    };
-
-    if (respostaExistente) {
-      campoTexto.value = respostaExistente.conteudo || "";
-
-      if (statusSalvamento) {
-        statusSalvamento.textContent =
-          "Último conteúdo salvo em " + formatarData(respostaExistente.updatedAt) + ".";
-      }
-
-      atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
+      salvarRespostas(respostasAtualizadas);
     } else {
-      atualizarBadge(statusBadgeFormulario, "Rascunho", "warning");
+      resposta = {
+        id: criarId("resp"),
+        formularioId: formulario.id,
+        formulario: formulario.nome,
+        conteudo: conteudo,
+        autor: usuario.nome,
+        autorId: usuario.id,
+        email: usuario.email,
+        deleted: false,
+        createdAt: momento,
+        updatedAt: momento
+      };
+
+      respostas.push(resposta);
+      salvarRespostas(respostas);
     }
 
-    window.enviarFormulario = async function() {
-      const conteudo = campoTexto.value.trim();
+    registrarOperacao("resposta", "upsert", resposta);
+    statusSalvamento.textContent = "Conteúdo salvo offline em " + formatarData(momento) + ".";
+    atualizarBadge(statusBadgeFormulario, "Salvo local", "warning");
 
-      if (!conteudo) {
-        alert("Preencha o conteúdo antes de salvar.");
-        return;
-      }
+    alert("Conteúdo salvo offline com sucesso.");
+    await sincronizarSePossivel();
+    renderFormularioAtual();
+  });
 
-      const momento = agoraIso();
-      const respostas = pegarRespostas();
-      let resposta = buscarRespostaDoFormulario(formulario.id, usuario.email);
+  botaoVoltarHome.addEventListener("click", function() {
+    renderHome();
+  });
 
-      if (resposta) {
-        resposta = Object.assign({}, resposta, {
-          conteudo: conteudo,
-          deleted: false,
-          updatedAt: momento
-        });
+  botaoSyncManual.addEventListener("click", async function() {
+    await sincronizarComServidor();
+  });
 
-        const respostasAtualizadas = respostas.map(function(item) {
-          return item.id === resposta.id ? resposta : item;
-        });
+  botaoSair.addEventListener("click", function() {
+    limparSessao();
+    showTela("auth");
+  });
 
-        salvarRespostas(respostasAtualizadas);
-      } else {
-        resposta = {
-          id: criarId("resp"),
-          formularioId: formulario.id,
-          formulario: formulario.nome,
-          conteudo: conteudo,
-          autor: usuario.nome,
-          autorId: usuario.id,
-          email: usuario.email,
-          deleted: false,
-          createdAt: momento,
-          updatedAt: momento
-        };
-
-        respostas.push(resposta);
-        salvarRespostas(respostas);
-      }
-
-      registrarOperacao("resposta", "upsert", resposta);
-
-      if (statusSalvamento) {
-        statusSalvamento.textContent =
-          "Conteúdo salvo offline em " + formatarData(momento) + ".";
-      }
-
-      atualizarBadge(statusBadgeFormulario, "Salvo local", "warning");
-
-      alert("Conteúdo salvo offline com sucesso.");
-      await sincronizarSePossivel();
-      atualizarBadge(statusBadgeFormulario, "Sincronizado", "success");
-    };
-
-    if (navigator.onLine) {
-      sincronizarComServidor();
-    }
+  if (navigator.onLine) {
+    sincronizarComServidor();
+  } else {
+    atualizarStatusSync("Modo offline ativo.", "warning");
   }
+
+  atualizarTelaAtual();
 };
