@@ -25,6 +25,7 @@ window.onload = function() {
   let sincronizacaoEmAndamento = null;
   let formularioAbertoId = null;
   let ultimaTentativaSync = 0;
+  let intervaloSyncAtivo = null;
 
   const STORAGE_KEYS = {
     usuarios: "usuarios",
@@ -293,6 +294,10 @@ window.onload = function() {
     localStorage.removeItem(STORAGE_KEYS.ultimaTela);
     localStorage.removeItem("formSelecionado");
     formularioAbertoId = null;
+    if (intervaloSyncAtivo) {
+      window.clearInterval(intervaloSyncAtivo);
+      intervaloSyncAtivo = null;
+    }
   }
 
   function buscarRespostaDoFormulario(formularioId, email) {
@@ -473,6 +478,25 @@ window.onload = function() {
     });
   }
 
+  function iniciarRotinaDeSincronizacao() {
+    if (intervaloSyncAtivo || !pegarUsuarioLogado()) {
+      return;
+    }
+
+    intervaloSyncAtivo = window.setInterval(function() {
+      sincronizarEmSegundoPlano(10000);
+    }, 15000);
+  }
+
+  function pararRotinaDeSincronizacao() {
+    if (!intervaloSyncAtivo) {
+      return;
+    }
+
+    window.clearInterval(intervaloSyncAtivo);
+    intervaloSyncAtivo = null;
+  }
+
   function renderFormularioAtual() {
     const usuario = pegarUsuarioLogado();
     const formularios = pegarFormularios().filter(function(formulario) {
@@ -516,9 +540,12 @@ window.onload = function() {
     const usuario = pegarUsuarioLogado();
 
     if (!usuario) {
+      pararRotinaDeSincronizacao();
       showTela("auth");
       return;
     }
+
+    iniciarRotinaDeSincronizacao();
 
     boasVindas.textContent = "Olá, " + usuario.nome;
     listaFormularios.innerHTML = "";
@@ -627,9 +654,12 @@ window.onload = function() {
     const ultimaTela = localStorage.getItem(STORAGE_KEYS.ultimaTela);
 
     if (!pegarUsuarioLogado()) {
+      pararRotinaDeSincronizacao();
       showTela("auth");
       return;
     }
+
+    iniciarRotinaDeSincronizacao();
 
     if (ultimaTela === "formulario" && (formularioAbertoId || localStorage.getItem("formSelecionado"))) {
       formularioAbertoId = formularioAbertoId || localStorage.getItem("formSelecionado");
@@ -830,6 +860,10 @@ window.onload = function() {
     sincronizarComServidor();
   } else {
     atualizarStatusSync("Modo offline ativo.", "warning");
+  }
+
+  if (pegarUsuarioLogado()) {
+    iniciarRotinaDeSincronizacao();
   }
 
   window.addEventListener("online", function() {
